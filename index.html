@@ -1,0 +1,166 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Satz Injector</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#080c12;color:#e5edf5;
+ font-family:Arial,sans-serif;padding:20px
+}
+main{max-width:600px;margin:auto}
+header{text-align:center;padding:25px 0}
+h1{color:#00e5ff;letter-spacing:2px}
+.card{
+ background:#111923;border:1px solid #263647;
+ border-radius:16px;padding:18px;margin-bottom:18px
+}
+label{display:block;margin:10px 0;color:#9db0c4}
+input,select{
+ width:100%;padding:13px;border-radius:9px;
+ background:#090f17;border:1px solid #2b3c4e;
+ color:white;margin-bottom:14px
+}
+button{
+ padding:12px;border:0;border-radius:9px;
+ cursor:pointer;font-weight:bold
+}
+.generate{width:100%;background:#00e5ff;color:#071117}
+.row{display:flex;gap:10px;margin-top:12px}
+.row button{flex:1;background:#233649;color:white}
+.item{
+ display:flex;justify-content:space-between;
+ align-items:center;gap:10px;
+ background:#0b131c;border:1px solid #203344;
+ padding:12px;border-radius:10px;margin-bottom:10px
+}
+.email{color:#60ddff;word-break:break-all}
+.item button{background:#20384b;color:#00e5ff}
+.small{font-size:12px;color:#8498ac}
+#list{max-height:400px;overflow:auto}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>SATZ INJECTOR</h1>
+<p class="small">Gmail Alias Generator</p>
+</header>
+
+<div class="card">
+<label>Gmail utama</label>
+<input id="gmail" placeholder="nama@gmail.com">
+
+<label>Prefix</label>
+<input id="prefix" placeholder="satz">
+
+<label>Jumlah alias</label>
+<select id="count">
+<option>10</option>
+<option>20</option>
+<option>30</option>
+<option>50</option>
+<option>100</option>
+</select>
+
+<button class="generate" onclick="generate()">GENERATE</button>
+
+<div class="row">
+<button onclick="copyAll()">COPY ALL</button>
+<button onclick="exportTxt()">EXPORT TXT</button>
+</div>
+</div>
+
+<div class="card">
+<label>Hasil</label>
+<div id="list" class="small">Belum ada hasil.</div>
+</div>
+</main>
+
+<script>
+let aliases=[];
+
+function generate(){
+ let gmail=document.getElementById("gmail").value.trim();
+ let prefix=document.getElementById("prefix").value.trim();
+ let count=Number(document.getElementById("count").value);
+
+ if(!/^[^@]+@gmail\.com$/i.test(gmail)){
+  alert("Masukkan Gmail yang valid!");
+  return;
+ }
+
+ let base=gmail.split("@")[0].split("+")[0];
+ let tag=prefix.replace(/[^a-zA-Z0-9]/g,"")||"alias";
+ aliases=[];
+
+ for(let i=1;i<=count;i++){
+  aliases.push(base+"+"+tag+i+"@gmail.com");
+ }
+
+ render();
+}
+
+function render(){
+ let list=document.getElementById("list");
+ list.innerHTML="";
+
+ aliases.forEach((email,i)=>{
+  let div=document.createElement("div");
+  div.className="item";
+
+  let left=document.createElement("div");
+  left.style.flex="1";
+
+  let num=document.createElement("div");
+  num.className="small";
+  num.textContent="Alias #"+(i+1);
+
+  let mail=document.createElement("div");
+  mail.className="email";
+  mail.textContent=email;
+
+  left.append(num,mail);
+
+  let btn=document.createElement("button");
+  btn.textContent="COPY";
+  btn.onclick=()=>copy(email);
+
+  div.append(left,btn);
+  list.append(div);
+ });
+}
+
+async function copy(text){
+ try{
+  await navigator.clipboard.writeText(text);
+  alert("Berhasil disalin!");
+ }catch(e){
+  prompt("Salin manual:",text);
+ }
+}
+
+function copyAll(){
+ if(!aliases.length)return alert("Generate dulu!");
+ copy(aliases.join("\n"));
+}
+
+function exportTxt(){
+ if(!aliases.length)return alert("Generate dulu!");
+
+ let blob=new Blob([aliases.join("\n")],{
+  type:"text/plain"
+ });
+ let url=URL.createObjectURL(blob);
+ let a=document.createElement("a");
+ a.href=url;
+ a.download="satz-alias.txt";
+ a.click();
+ URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
